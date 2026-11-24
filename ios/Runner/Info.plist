@@ -31,6 +31,10 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<!-- 局域网 WebDAV 服务器（192.168.x.x）需要本地网络权限；
+	     不声明此 key 时 iOS 不弹授权框、连接静默失败 -->
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>访问您局域网内的 WebDAV 服务器以同步书籍、练习进度和统计数据</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
