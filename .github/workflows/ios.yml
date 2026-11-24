@@ -1,0 +1,48 @@
+name: iOS Build (unsigned IPA)
+
+# 在 macOS 云端构建未签名 IPA。
+# 产物用 Sideloadly / AltStore / 爱思助手 + 个人 Apple ID 自签后安装。
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.44.6
+          cache: true
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Test
+        run: flutter test
+
+      # 未签名构建：不使用任何证书/描述文件
+      - name: Build iOS (no codesign)
+        run: flutter build ios --release --no-codesign
+
+      - name: Package unsigned IPA
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | cut -d' ' -f2 | cut -d'+' -f1)
+          cd build/ios/iphoneos
+          mkdir Payload
+          cp -R Runner.app Payload/
+          zip -qry "chaoshu-ios-v${VERSION}.ipa" Payload
+          mkdir -p "$GITHUB_WORKSPACE/dist"
+          cp "chaoshu-ios-v${VERSION}.ipa" "$GITHUB_WORKSPACE/dist/"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chaoshu-ios-ipa
+          path: dist/*.ipa
+          if-no-files-found: error
